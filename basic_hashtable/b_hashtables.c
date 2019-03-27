@@ -72,6 +72,9 @@ BasicHashTable *create_hash_table(int capacity)
 {
   BasicHashTable *ht;
 
+  ht->capacity = capacity;
+  ht->storage = malloc(sizeof(Pair *) * capacity);
+
   return ht;
 }
 
