@@ -95,16 +95,18 @@ void hash_table_insert(HashTable *ht, char *key, char *value)
 {
   LinkedPair *new_pair;
   new_pair = create_pair(key, value);
-  int hashed = hash(new_pair->key, ht->capacity);
+  unsigned int hashed = hash(new_pair->key, ht->capacity);
 
-  
+  LinkedPair *stored_pair= ht->storage[hashed];
 
-  if (ht->storage[hashed])
+  if (stored_pair != NULL)
   {
-    printf("Overwriting existing data");
-    free(ht->storage[hashed]);
+    while(stored_pair->next != NULL)
+    {
+      stored_pair = stored_pair->next;
+    }
   }
-  ht->storage[hashed] = new_pair;
+  stored_pair = new_pair;
 
 }
 
@@ -131,6 +133,26 @@ void hash_table_remove(HashTable *ht, char *key)
  */
 char *hash_table_retrieve(HashTable *ht, char *key)
 {
+  unsigned int hashed = hash(key, ht->capacity);
+  LinkedPair *stored_pair;
+  if (ht->storage[hashed])
+  {
+    stored_pair = ht->storage[hashed];
+  }
+  
+  while (stored_pair != NULL)
+  {
+    
+    if(stored_pair->key == key){
+      return stored_pair->value;
+    }
+    else
+    {
+      stored_pair = stored_pair->next;
+    }
+    
+  }
+
   return NULL;
 }
 
