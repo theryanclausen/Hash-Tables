@@ -75,6 +75,10 @@ HashTable *create_hash_table(int capacity)
 {
   HashTable *ht;
 
+  ht = malloc(sizeof(HashTable));
+  ht->capacity = capacity;
+  ht->storage = calloc(sizeof(LinkedPair *), capacity);
+
   return ht;
 }
 
@@ -89,6 +93,18 @@ HashTable *create_hash_table(int capacity)
  */
 void hash_table_insert(HashTable *ht, char *key, char *value)
 {
+  LinkedPair *new_pair;
+  new_pair = create_pair(key, value);
+  int hashed = hash(new_pair->key, ht->capacity);
+
+  
+
+  if (ht->storage[hashed])
+  {
+    printf("Overwriting existing data");
+    free(ht->storage[hashed]);
+  }
+  ht->storage[hashed] = new_pair;
 
 }
 

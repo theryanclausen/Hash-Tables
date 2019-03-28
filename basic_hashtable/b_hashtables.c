@@ -106,7 +106,7 @@ void hash_table_insert(BasicHashTable *ht, char *key, char *value)
  ****/
 void hash_table_remove(BasicHashTable *ht, char *key)
 {
-  int hashed = hash(key, ht->capacity);
+  unsigned int hashed = hash(key, ht->capacity);
   free(ht->storage[hashed]);
   ht->storage[hashed] = NULL;
 }
@@ -118,7 +118,7 @@ void hash_table_remove(BasicHashTable *ht, char *key)
  ****/
 char *hash_table_retrieve(BasicHashTable *ht, char *key)
 {
-  int hashed = hash(key, ht->capacity);
+  unsigned int hashed = hash(key, ht->capacity);
   if (ht->storage[hashed]){
     return ht->storage[hashed]->value;
   }
@@ -134,7 +134,7 @@ void destroy_hash_table(BasicHashTable *ht)
 {
   for(int i = 0; i < ht->capacity; i++)
   {
-    if (!ht->storage[i] == NULL)
+    if (ht->storage[i] != NULL)
     {
       hash_table_remove(ht, ht->storage[i]->key);
     }
