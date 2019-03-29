@@ -226,6 +226,7 @@ void destroy_hash_table(HashTable *ht)
       destroy_pair(ht->storage[i]);
     }
   }
+  free(ht->storage);
   free(ht);
 }
 
@@ -245,7 +246,7 @@ HashTable *hash_table_resize(HashTable *ht)
   {
     if (ht->storage[i] != NULL)
     {
-      LinkedPair *link = find_last_link(ht->storage[i]);
+      LinkedPair *link = ht->storage[i];
       while (link != NULL)
       {
         
