@@ -9,7 +9,8 @@
   More specifically, the `next` field is a pointer pointing to the the 
   next `LinkedPair` in the list of `LinkedPair` nodes. 
  */
-typedef struct LinkedPair {
+typedef struct LinkedPair
+{
   char *key;
   char *value;
   struct LinkedPair *next;
@@ -18,7 +19,8 @@ typedef struct LinkedPair {
 /*
   Hash table with linked pairs.
  */
-typedef struct HashTable {
+typedef struct HashTable
+{
   int capacity;
   LinkedPair **storage;
 } HashTable;
@@ -41,7 +43,8 @@ LinkedPair *create_pair(char *key, char *value)
  */
 void destroy_pair(LinkedPair *pair)
 {
-  if (pair != NULL) {
+  if (pair != NULL)
+  {
     free(pair->key);
     free(pair->value);
     free(pair);
@@ -57,9 +60,10 @@ unsigned int hash(char *str, int max)
 {
   unsigned long hash = 5381;
   int c;
-  unsigned char * u_str = (unsigned char *)str;
+  unsigned char *u_str = (unsigned char *)str;
 
-  while ((c = *u_str++)) {
+  while ((c = *u_str++))
+  {
     hash = ((hash << 5) + hash) + c;
   }
 
@@ -76,9 +80,8 @@ HashTable *create_hash_table(int capacity)
   HashTable *ht;
 
   ht = malloc(sizeof(HashTable));
-  ht->capacity = capacity;
   ht->storage = calloc(sizeof(LinkedPair *), capacity);
-
+  ht->capacity = capacity;
   return ht;
 }
 
@@ -93,21 +96,31 @@ HashTable *create_hash_table(int capacity)
  */
 void hash_table_insert(HashTable *ht, char *key, char *value)
 {
-  LinkedPair *new_pair;
-  new_pair = create_pair(key, value);
-  unsigned int hashed = hash(new_pair->key, ht->capacity);
 
-  LinkedPair *stored_pair= ht->storage[hashed];
-
-  if (stored_pair != NULL)
+  unsigned int hashed = hash(key, ht->capacity);
+  if (ht->storage[hashed])
   {
-    while(stored_pair->next != NULL)
+    LinkedPair *link = ht->storage[hashed];
+
+    while (link)
     {
-      stored_pair = stored_pair->next;
+      if (strcmp(link->key, key) == 0)
+      {
+        link->value = value;
+        break;
+      }
+      if (link->next == NULL)
+      {
+        link->next = create_pair(key, value);
+        break;
+      }
+      link = link->next;
     }
   }
-  stored_pair = new_pair;
-
+  else
+  {
+    ht->storage[hashed] = create_pair(key, value);
+  }
 }
 
 /*
@@ -120,7 +133,32 @@ void hash_table_insert(HashTable *ht, char *key, char *value)
  */
 void hash_table_remove(HashTable *ht, char *key)
 {
+  unsigned int hashed = hash(key, ht->capacity);
 
+  if (ht->storage[hashed])
+  {
+    LinkedPair *link = ht->storage[hashed];
+    if (strcmp(link->key, key) == 0)
+    {
+      destroy_pair(link);
+    }
+    else
+    {
+      do
+      {
+        if (strcmp(link->next->key, key) == 0)
+        {
+          LinkedPair *next_link = link->next->next;
+          destroy_pair(link->next);
+          link->next = next_link;
+          break;
+        }
+
+        link = link->next;
+
+      } while (link->next);
+    }
+  }
 }
 
 /*
@@ -134,26 +172,40 @@ void hash_table_remove(HashTable *ht, char *key)
 char *hash_table_retrieve(HashTable *ht, char *key)
 {
   unsigned int hashed = hash(key, ht->capacity);
-  LinkedPair *stored_pair;
+
   if (ht->storage[hashed])
   {
-    stored_pair = ht->storage[hashed];
-  }
-  
-  while (stored_pair != NULL)
-  {
-    
-    if(stored_pair->key == key){
-      return stored_pair->value;
-    }
-    else
+    LinkedPair *link = ht->storage[hashed];
+    do
     {
-      stored_pair = stored_pair->next;
-    }
-    
+      if (strcmp(link->key, key) == 0)
+      {
+        return link->value;
+      }
+      if (link->next == NULL)
+      {
+        return NULL;
+      }
+
+      link = link->next;
+
+    } while (link);
   }
 
   return NULL;
+}
+
+LinkedPair *find_last_link(LinkedPair *link)
+{
+  if (link->next == NULL)
+  {
+    return NULL;
+  }
+  while (link->next != NULL)
+  {
+    link = link->next;
+  }
+  return link;
 }
 
 /*
@@ -163,7 +215,18 @@ char *hash_table_retrieve(HashTable *ht, char *key)
  */
 void destroy_hash_table(HashTable *ht)
 {
-
+  for (int i = 0; i < ht->capacity; i++)
+  {
+    if (ht->storage[i])
+    {
+      while (find_last_link(ht->storage[i]) != NULL)
+      {
+        destroy_pair(find_last_link(ht->storage[i]));
+      }
+      destroy_pair(ht->storage[i]);
+    }
+  }
+  free(ht);
 }
 
 /*
@@ -176,11 +239,25 @@ void destroy_hash_table(HashTable *ht)
  */
 HashTable *hash_table_resize(HashTable *ht)
 {
-  HashTable *new_ht;
+  HashTable *new_ht = create_hash_table(ht->capacity * 2); 
 
+  for (int i = 0; i < ht->capacity; i++)
+  {
+    if (ht->storage[i] != NULL)
+    {
+      LinkedPair *link = find_last_link(ht->storage[i]);
+      while (link != NULL)
+      {
+        
+        hash_table_insert(new_ht, link->key, link->value);
+        link = link->next;
+
+      }
+    }
+  }
+  free(ht);
   return new_ht;
 }
-
 
 #ifndef TESTING
 int main(void)
